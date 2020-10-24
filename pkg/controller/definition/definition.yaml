@@ -1,0 +1,44 @@
+jobs:
+  testing:
+    displayname: MySteps
+    working-directory: ./test
+    steps:
+      - command: AzPowerShellCore
+        working-directory: ./test
+        displayname: MyStep
+        with:
+          arguments: -ResourceGroup myRG
+          scriptToRun: ./myscript.ps1
+          subscription: azsubscription
+          tenant: tenant.onmicrosoft.com
+          serviceprincipal: spname
+          secret: secret
+parameters: {}
+
+---
+jobs:
+  testing:
+    displayname: test deployment
+    working-directory: ./main
+    steps:
+      - command: AzPowerShellCore
+        working-directory: ./main
+        displayname: deploy 1st ARM Template
+        with:
+          arguments: -ResourceGroupName CLOUD-SHIPPER-RG -StorageAccountName anmocktst
+          scriptToRun: ./deploy-arm-template.ps1
+          subscription: SUBSCRIPTION
+          tenant: TENANT
+          serviceprincipal: SERVICEPRINCIPAL_NAME
+          secret: SERVICEPRINCIPAL_SECRET
+      - command: AzPowerShellCore
+        working-directory: ./main
+        displayname: deploy 2nd ARM Template
+        with:
+          arguments: -ResourceGroupName CLOUD-SHIPPER-RG -StorageAccountName anmockshp
+          scriptToRun: ./deploy-arm-template.ps1
+          subscription: SUBSCRIPTION
+          tenant: TENANT
+          serviceprincipal: SERVICEPRINCIPAL_NAME
+          secret: SERVICEPRINCIPAL_SECRET
+parameters: {}
