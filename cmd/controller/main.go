@@ -13,17 +13,15 @@ import (
 
 	"github.com/andreasM009/cloudshipper-agent/pkg/channel"
 
-	"github.com/andreasM009/cloudshipper-agent/pkg/runner/settings"
-
 	natsforwarder "github.com/andreasM009/cloudshipper-agent/pkg/controller/events/nats"
 )
 
 const (
-	envScriptToRun            = "SCRIPT_TO_RUN"
 	envServicePrincipalName   = "SERVICEPRINCIPAL_NAME"
 	envServicePrincipalSecret = "SERVICEPRINCIPAL_SECRET"
 	envTenant                 = "TENANT"
 	envSubscription           = "SUBSCRIPTION"
+	cntrrunnerChannel         = "NATS_CONTROLLER_RUNNER_CHANNEL"
 )
 
 var yamlTestDeploymentDefinition = `
@@ -65,7 +63,7 @@ func main() {
 	servicePrincipalSecret := os.Getenv(envServicePrincipalSecret)
 	tenant := os.Getenv(envTenant)
 	subscription := os.Getenv(envSubscription)
-	natsChannelName := settings.GetControllerRunnerChannelName()
+	natsChannelName := os.Getenv(cntrrunnerChannel)
 	natsStreamingLiveChannelName := os.Getenv("NATS_LIVE_STREAMING_CHANNEL_NAME")
 
 	yamlTestDeploymentDefinition = strings.ReplaceAll(yamlTestDeploymentDefinition, envServicePrincipalName, servicePrincipalName)

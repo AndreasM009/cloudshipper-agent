@@ -2,14 +2,15 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/andreasM009/cloudshipper-agent/pkg/commands/azure"
-	"github.com/andreasM009/cloudshipper-agent/pkg/runner/settings"
 
 	"github.com/andreasM009/cloudshipper-agent/pkg/channel"
 
@@ -21,9 +22,34 @@ import (
 	"github.com/andreasM009/cloudshipper-agent/pkg/runner/commands"
 )
 
-const ()
+// Needed Environment variables
+// ARTIFACTS_DIRECTORY directory where deployment artifacts are downloaded
+// NATS_CONTROLLER_RUNNER_CHANNEL name of nats channel to use
+// NATS_CONNECTION_STRINGS nats server or cluster connection strings
+
+var usageStr = `
+Usage: runner [options]
+Options:
+	-s <url>            NATS server URL(s)
+	-c <channel name>   NATS channel name to controller
+`
+
+func usage() {
+	log.Fatalf(usageStr)
+}
 
 func main() {
+	var (
+		natsServerURL   string
+		natsChannelName string
+	)
+
+	flag.StringVar(&natsServerURL, "s", "", "The nats server URLs (separated by comma)")
+	flag.StringVar(&natsChannelName, "c", "", "The name of the channel (nats subscription) to communicate with controller")
+
+	flag.Usage = usage
+	flag.Parse()
+
 	// load commands
 	azure.LoadAzureCommands()
 
@@ -34,7 +60,7 @@ func main() {
 	signal.Notify(sigchannel, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 
 	// nats channel
-	natsChannel, err := channel.NewNatsChannel(settings.GetControllerRunnerChannelName(), []string{"localhost:4222"}, fmt.Sprintf("%s-runner", settings.GetControllerRunnerChannelName()))
+	natsChannel, err := channel.NewNatsChannel(natsChannelName, strings.Split(natsServerURL, ","), fmt.Sprintf("%s-runner", natsChannelName))
 	if err != nil {
 		log.Panic(err)
 	}

@@ -15,3 +15,6 @@
 # vendor/
 debug_runner_andreasmock.env
 debug_controller_andreasmock.env
+
+# Dist 
+dist/

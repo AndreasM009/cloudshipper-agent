@@ -4,6 +4,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/andreasM009/cloudshipper-agent/pkg/commands/azure"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -27,6 +29,7 @@ parameters: {}
 `
 
 func TestRuntimeDefinitionFromDeployment(t *testing.T) {
+	azure.LoadAzureCommands()
 	definition, err := NewFromYaml([]byte(yamlDeploymentDefinition))
 	assert.Nil(t, err)
 	assert.NotNil(t, definition)

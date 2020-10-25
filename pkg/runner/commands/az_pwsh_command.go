@@ -77,7 +77,9 @@ func (cmd *AzPwshCommand) Execute(ctx context.Context) (int, error) {
 		fmt.Sprintf("HOME=/Users/%s", os.Getenv("USER")),
 	}
 
-	cmd.controllerProxy.Report(logs.NewInfoLog("Executing Azure PowerShell."))
+	if err := cmd.controllerProxy.Report(logs.NewInfoLog("Executing Azure PowerShell.")); err != nil {
+		fmt.Println(err)
+	}
 
 	return executeProcessAsync(ctx, cmd.controllerProxy, cmd.controllerCommand.ExecutableName, args, env, cmd.done)
 }

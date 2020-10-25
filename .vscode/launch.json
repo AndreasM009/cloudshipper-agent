@@ -12,7 +12,7 @@
             "program": "${workspaceFolder}/cmd/runner",
             "env": {},
             "envFile": "${workspaceFolder}/debug_runner_${env:USER}.env",
-            "args": []
+            "args": ["-s", "localhost:4222", "-c", "cntrrunnerdebug"]
         },
         {
             "name": "Launch Controller standalone",
