@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/andreasM009/cloudshipper-agent/pkg/commands/azure"
 
@@ -50,6 +51,8 @@ func main() {
 	flag.Usage = usage
 	flag.Parse()
 
+	fmt.Println("Connecting to nats server:", natsServerURL)
+
 	// load commands
 	azure.LoadAzureCommands()
 
@@ -62,6 +65,7 @@ func main() {
 	// nats channel
 	natsChannel, err := channel.NewNatsChannel(natsChannelName, strings.Split(natsServerURL, ","), fmt.Sprintf("%s-runner", natsChannelName))
 	if err != nil {
+		time.Sleep(20 * time.Second)
 		log.Panic(err)
 	}
 

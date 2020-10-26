@@ -27,6 +27,8 @@ func (forwarder *EventForwarder) ForwardDeploymentEvent(evt *base.DeploymentEven
 		fmt.Println("Error forwarding event to nats streaming server")
 	}
 
+	fmt.Println(string(json))
+
 	forwarder.stream.SnatConnection.Publish(forwarder.stream.NatsPublishName, json)
 }
 
@@ -36,6 +38,8 @@ func (forwarder *EventForwarder) ForwardCommandEvent(evt *base.CommandEvent) {
 	if err != nil {
 		fmt.Println("Error forwarding event to nats streaming server")
 	}
+
+	fmt.Println(string(json))
 
 	forwarder.stream.SnatConnection.Publish(forwarder.stream.NatsPublishName, json)
 }

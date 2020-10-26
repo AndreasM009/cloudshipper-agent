@@ -23,9 +23,16 @@ LASTEST_VERSION_TAG ?=
 
 ifdef REL_VERSION
 	AGENT_VERSION := $(REL_VERSION)
+	DOCKER_TAG := $(REL_VERSION)
+	DOCKER_LATEST_TAG := latest
 else
 	AGENT_VERSION := edge
+	DOCKER_TAG := edge
+	DOCKER_LATEST_TAG := edge
 endif
+
+CONTROLLER_IMAGE_NAME := cs-agent-controller
+RUNNER_IMAGE_NAME := cs-agent-runner
 
 ################################################################################
 # Architectue
@@ -152,3 +159,49 @@ lint:
 .PHONY: test
 test:
 	go test ./pkg/...
+
+################################################################################
+# Target: docker-build-...
+################################################################################
+.PHONY: docker-build-runner docker-build-controller docker-build-all
+
+docker-build-runner:
+	docker build -t $(RUNNER_IMAGE_NAME):$(DOCKER_TAG) -f ./Docker/runner/Dockerfile .
+
+docker-build-controller:
+	docker build -t $(CONTROLLER_IMAGE_NAME):$(DOCKER_TAG) -f ./Docker/controller/Dockerfile .
+
+docker-build-all: docker-build-controller docker-build-runner
+
+################################################################################
+# Target: docker-publish
+################################################################################
+check-docker-publish-args:
+ifeq ($(s),)
+	$(error docker server must be set: s=<dockerserver>)
+endif
+ifeq ($(u),)
+	$(error docker login must be set: u=<dockerusername>)
+endif
+ifeq ($(p),)
+	$(error docker password must be set: p=<dockerpassword>)
+endif
+
+.PHONY: docker-publish-runner
+docker-publish-runner: check-docker-publish-args
+	docker login -p $(p) -u $(u)
+	docker build -t $(s)/$(RUNNER_IMAGE_NAME):$(DOCKER_TAG) -f ./Docker/runner/Dockerfile .
+	docker tag $(s)/$(RUNNER_IMAGE_NAME):$(DOCKER_TAG) $(s)/$(RUNNER_IMAGE_NAME):$(DOCKER_LATEST_TAG)
+	docker push $(s)/$(RUNNER_IMAGE_NAME):$(DOCKER_TAG)
+	docker push $(s)/$(RUNNER_IMAGE_NAME):$(DOCKER_LATEST_TAG)
+
+.PHONY: docker-publish-controller
+docker-publish-controller: check-docker-publish-args
+	docker login -p $(p) -u $(u)
+	docker build -t $(s)/$(CONTROLLER_IMAGE_NAME):$(DOCKER_TAG) -f ./Docker/controller/Dockerfile .
+	docker tag $(s)/$(CONTROLLER_IMAGE_NAME):$(DOCKER_TAG) $(s)/$(CONTROLLER_IMAGE_NAME):$(DOCKER_LATEST_TAG)
+	docker push $(s)/$(CONTROLLER_IMAGE_NAME):$(DOCKER_TAG)
+	docker push $(s)/$(CONTROLLER_IMAGE_NAME):$(DOCKER_LATEST_TAG)
+
+.PHONY: docker-publish-all
+docker-publish-all: docker-publish-controller docker-publish-runner

@@ -21,6 +21,9 @@ jobs:
     displayname: test deployment
     working-directory: ./main
     steps:
+      - command: AgentDownloadArtifacts
+        with:
+          artifactsURL: https://anmockartifacts.blob.core.windows.net/release/main.zip
       - command: AzPowerShellCore
         working-directory: ./main
         displayname: deploy 1st ARM Template

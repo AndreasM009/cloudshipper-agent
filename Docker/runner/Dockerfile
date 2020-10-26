@@ -34,6 +34,8 @@ RUN apt-get update \
     # required for SSL
         ca-certificates \
         gss-ntlmssp \
+        wget \
+        unzip \
     # Download the Linux package and save it
     && echo ${PS_PACKAGE_URL} \
     && curl -sSL ${PS_PACKAGE_URL} -o /tmp/powershell.deb \
@@ -64,8 +66,16 @@ RUN pwsh -Command "Install-Module -Name Az -AllowClobber -Scope AllUsers -Reposi
 # Create user
 RUN adduser --disabled-password --gecos "" --uid 10001 appuser
 
+# create artifacts directory
+RUN mkdir artifacts
+RUN chown -R appuser /artifacts
+
+
 WORKDIR /
 COPY --from=build /dist/linux_amd64/release /
+COPY --from=build /cmd/runner/azpwsh.ps1 /
+
+RUN chown appuser ./azpwsh.ps1
 
 USER appuser:appuser
 

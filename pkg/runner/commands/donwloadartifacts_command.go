@@ -3,6 +3,9 @@ package commands
 import (
 	"context"
 	"errors"
+	"fmt"
+	"path"
+	"path/filepath"
 
 	controllerCommand "github.com/andreasM009/cloudshipper-agent/pkg/commands"
 	"github.com/andreasM009/cloudshipper-agent/pkg/runner/proxy"
@@ -42,7 +45,8 @@ func newDownloadArtifactsCommand(cmd interface{}, proxy proxy.ControllerProxy) (
 func (cmd *DownloadArtifactsCommand) Execute(ctx context.Context) (int, error) {
 	artifactsDirectory := settings.GetArtifactsDirectory()
 
-	args := []string{
+	argsWget := []string{
+		"-q",
 		"-P",
 		artifactsDirectory,
 		cmd.controllerCommand.ArtifactsURL,
@@ -50,7 +54,27 @@ func (cmd *DownloadArtifactsCommand) Execute(ctx context.Context) (int, error) {
 
 	env := []string{}
 
-	return executeProcessAsync(ctx, cmd.controllerProxy, "wget", args, env, cmd.done)
+	zipfile := filepath.Base(cmd.controllerCommand.ArtifactsURL)
+	zippath := path.Join(artifactsDirectory, zipfile)
+	argsUnzip := []string{
+		"-o",
+		"-q",
+		zippath,
+		"-d",
+		artifactsDirectory,
+	}
+
+	wgetDone := make(chan int, 1)
+
+	ret, err := executeProcessAsync(ctx, cmd.controllerProxy, "wget", argsWget, env, wgetDone)
+	if err != nil {
+		cmd.done <- ret
+		return ret, err
+	}
+
+	fmt.Println("############ Running unzip now ########################")
+
+	return executeProcessAsync(ctx, cmd.controllerProxy, "unzip", argsUnzip, env, cmd.done)
 }
 
 // ExecuteAsync execute

@@ -22,7 +22,7 @@
             "program": "${workspaceFolder}/cmd/controller",
             "env": {},
             "envFile": "${workspaceFolder}/debug_controller_${env:USER}.env",
-            "args": []
+            "args": ["-s", "localhost:4222", "-c", "cntrrunnerdebug", "-l", "agentlive", "-m", "Kubernetes", "-cluster-id", "example-stan"]
         }
     ]
 }

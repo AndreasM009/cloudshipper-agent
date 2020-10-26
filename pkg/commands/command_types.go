@@ -35,7 +35,7 @@ func Parse(s string) CommandType {
 		return AzPowershellCore
 	case "azbash":
 		return AzBash
-	case "agentdownloadartifactscommand":
+	case "agentdownloadartifacts":
 		return AgentDownloadArtifacts
 	default:
 		return UnknownCommand
