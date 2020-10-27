@@ -3,7 +3,6 @@ package commands
 import (
 	"context"
 	"errors"
-	"fmt"
 	"path"
 	"path/filepath"
 
@@ -71,8 +70,6 @@ func (cmd *DownloadArtifactsCommand) Execute(ctx context.Context) (int, error) {
 		cmd.done <- ret
 		return ret, err
 	}
-
-	fmt.Println("############ Running unzip now ########################")
 
 	return executeProcessAsync(ctx, cmd.controllerProxy, "unzip", argsUnzip, env, cmd.done)
 }

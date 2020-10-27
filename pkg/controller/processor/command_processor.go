@@ -47,11 +47,12 @@ func (processor *CommandProcessor) ProcessAsync() error {
 		return errors.New("No jobns defined to process")
 	}
 
-	processor.eventForwarder.ForwardDeploymentEvent(processor.createDeploymentEvent())
+	processor.eventForwarder.ForwardDeploymentEvent(processor.createDeploymentEvent(true, false, 0))
 
 	_, err := processor.channel.NatsConn.Subscribe(processor.channel.NatsPublishName, func(msg *natsio.Msg) {
 		requestType, runnerRequest, err := getRequestFromStream(msg.Data)
 		if err != nil {
+			processor.eventForwarder.ForwardDeploymentEvent(processor.createDeploymentEvent(false, true, 1))
 			log.Panic(err)
 		}
 
@@ -66,6 +67,7 @@ func (processor *CommandProcessor) ProcessAsync() error {
 
 			if processor.currentCommandIdx >= len(job.Commands) {
 				msg.Respond(nil)
+				processor.eventForwarder.ForwardDeploymentEvent(processor.createDeploymentEvent(false, true, 0))
 				processor.finishedChannel <- 0
 				return
 			}
@@ -77,6 +79,7 @@ func (processor *CommandProcessor) ProcessAsync() error {
 
 		case requests.ControllerReportCommandError:
 			if rq, ok := runnerRequest.(*requests.ControllerReportErrorRequest); ok {
+				processor.eventForwarder.ForwardDeploymentEvent(processor.createDeploymentEvent(false, true, rq.Exitcode))
 				processor.finishedChannel <- rq.Exitcode
 				return
 			}
@@ -157,6 +160,7 @@ func (processor *CommandProcessor) createCommandEvent(l *logs.LogMessage) *event
 			DefinitionID:   processor.runtimeDefinition.DefinitionID,
 			DeploymentID:   processor.runtimeDefinition.ID,
 			DeploymentName: processor.runtimeDefinition.DeploymentName,
+			EventName:      "commandEvent",
 		},
 		JobName:            job.Name,
 		JobDisplayName:     job.Displayname,
@@ -169,7 +173,7 @@ func (processor *CommandProcessor) createCommandEvent(l *logs.LogMessage) *event
 	return evt
 }
 
-func (processor *CommandProcessor) createDeploymentEvent() *events.DeploymentEvent {
+func (processor *CommandProcessor) createDeploymentEvent(started, finished bool, exitcode int) *events.DeploymentEvent {
 	jobs := make([]events.DeploymentJob, len(processor.runtimeDefinition.Jobs))
 
 	for k, j := range processor.runtimeDefinition.Jobs {
@@ -199,7 +203,11 @@ func (processor *CommandProcessor) createDeploymentEvent() *events.DeploymentEve
 			DefinitionID:   processor.runtimeDefinition.DefinitionID,
 			DeploymentID:   processor.runtimeDefinition.ID,
 			DeploymentName: processor.runtimeDefinition.DeploymentName,
+			EventName:      "deploymentEvent",
 		},
-		Jobs: jobs,
+		Jobs:     jobs,
+		Started:  started,
+		Finished: finished,
+		Exitcode: exitcode,
 	}
 }

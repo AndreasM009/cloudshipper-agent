@@ -16,6 +16,9 @@ type DeploymentJob struct {
 
 // DeploymentEvent event about definition
 type DeploymentEvent struct {
-	Event `json:"event"`
-	Jobs  []DeploymentJob `json:"jobs"`
+	Event
+	Jobs     []DeploymentJob `json:"jobs"`
+	Started  bool            `json:"started"`
+	Finished bool            `json:"finished"`
+	Exitcode int             `json:"exitcode"`
 }

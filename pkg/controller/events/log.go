@@ -4,10 +4,10 @@ import "github.com/andreasM009/cloudshipper-agent/pkg/logs"
 
 // Log entry
 type Log struct {
-	IsWarning bool
-	IsError   bool
-	IsInfo    bool
-	Message   string
+	IsWarning bool   `json:"isWarning"`
+	IsError   bool   `json:"isError"`
+	IsInfo    bool   `json:"isInfo"`
+	Message   string `json:"message"`
 }
 
 // NewLogFromLogs log

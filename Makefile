@@ -8,7 +8,9 @@ export GOSUMDB ?= sum.golang.org
 CGO         ?= 0
 BINARIES ?= controller runner
 CONTROLLER_BINARY ?= controller
-RUNNER_BINARY ?= runner 
+RUNNER_BINARY ?= runner
+LIVESTREAMCLIENT_BINARY ?= livestreamclient
+JOBCLIENT_BINARY ?= jobclient
 
 ################################################################################
 # Git info
@@ -130,21 +132,38 @@ $(foreach ITEM,$(BINARIES),$(eval $(call genBinariesForTarget,$(ITEM)$(BINARY_EX
 # Target: build-controller                                                              
 ################################################################################
 .PHONY: build-controller
-CONTROLLER_BIN_EXT:=$(AGENT_OUT_DIR)/$(CONTROLLER_BINARY)$(BINARY_EXT)
-build-controller: $(CONTROLLER_BIN_EXT)
-
-CGO_ENABLED=$(CGO) GOOS=$(GOOS) GOARCH=$(GOARCH) go build $(GCFLAGS) -ldflags=$(LDFLAGS) \
--o $(AGENT_OUT_DIR/$(CONTROLLER_BIN_EXT) ./cmd/$(CONTROLLER_BINARY)
+CONTROLLER_BIN_EXT:=$(CONTROLLER_BINARY)$(BINARY_EXT)
+build-controller:
+	CGO_ENABLED=$(CGO) GOOS=$(GOOS) GOARCH=$(GOARCH) go build $(GCFLAGS) -ldflags=$(LDFLAGS) \
+	-o $(AGENT_OUT_DIR)/$(CONTROLLER_BIN_EXT) ./cmd/$(CONTROLLER_BINARY)
 
 ################################################################################
 # Target: build-runner                                                              
 ################################################################################
 .PHONY: build-runner
-RUNNER_BIN_EXT:=$(AGENT_OUT_DIR)/$(RUNNER_BINARY)$(BINARY_EXT)
-build-runner: $(RUNNER_BIN_EXT)
+RUNNER_BIN_EXT:=$(RUNNER_BINARY)$(BINARY_EXT)
+build-runner:
+	CGO_ENABLED=$(CGO) GOOS=$(GOOS) GOARCH=$(GOARCH) go build $(GCFLAGS) -ldflags=$(LDFLAGS) \
+	-o $(AGENT_OUT_DIR)/$(RUNNER_BIN_EXT) ./cmd/$(RUNNER_BINARY)
 
-CGO_ENABLED=$(CGO) GOOS=$(GOOS) GOARCH=$(GOARCH) go build $(GCFLAGS) -ldflags=$(LDFLAGS) \
--o $(AGENT_OUT_DIR/$(RUNNER_BIN_EXT) ./cmd/$(RUNNER_BINARY)
+################################################################################
+# Target: build-livestreamclient                                                          
+################################################################################
+.PHONY: build-livestreamclient
+LCLIENT_BIN_EXT:=$(LIVESTREAMCLIENT_BINARY)$(BINARY_EXT)
+build-livestreamclient:
+	CGO_ENABLED=$(CGO) GOOS=$(GOOS) GOARCH=$(GOARCH) go build $(GCFLAGS) -ldflags=$(LDFLAGS) \
+	-o $(AGENT_OUT_DIR)/$(LCLIENT_BIN_EXT) ./cmd/$(LIVESTREAMCLIENT_BINARY)
+
+################################################################################
+# Target: build-jobclient                                                          
+################################################################################
+.PHONY: build-jobclient
+JOBCLIENT_BIN_EXT:=$(JOBCLIENT_BINARY)$(BINARY_EXT)
+build-jobclient:
+	CGO_ENABLED=$(CGO) GOOS=$(GOOS) GOARCH=$(GOARCH) go build $(GCFLAGS) -ldflags=$(LDFLAGS) \
+	-o $(AGENT_OUT_DIR)/$(JOBCLIENT_BIN_EXT) ./cmd/$(JOBCLIENT_BINARY)
+
 
 ################################################################################
 # Target: lint                                                                

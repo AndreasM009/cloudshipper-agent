@@ -1,23 +1,5 @@
 jobs:
   testing:
-    displayname: MySteps
-    working-directory: ./test
-    steps:
-      - command: AzPowerShellCore
-        working-directory: ./test
-        displayname: MyStep
-        with:
-          arguments: -ResourceGroup myRG
-          scriptToRun: ./myscript.ps1
-          subscription: azsubscription
-          tenant: tenant.onmicrosoft.com
-          serviceprincipal: spname
-          secret: secret
-parameters: {}
-
----
-jobs:
-  testing:
     displayname: test deployment
     working-directory: ./main
     steps:
@@ -45,4 +27,3 @@ jobs:
           tenant: TENANT
           serviceprincipal: SERVICEPRINCIPAL_NAME
           secret: SERVICEPRINCIPAL_SECRET
-parameters: {}

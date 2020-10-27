@@ -10,8 +10,9 @@
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}/cmd/runner",
-            "env": {},
-            "envFile": "${workspaceFolder}/debug_runner_${env:USER}.env",
+            "env": {
+                "ARTIFACTS_DIRECTORY":"/Users/${env:USER}/tmp/temp_cloudshipper/artifacts"
+            },
             "args": ["-s", "localhost:4222", "-c", "cntrrunnerdebug"]
         },
         {
@@ -21,8 +22,25 @@
             "mode": "auto",
             "program": "${workspaceFolder}/cmd/controller",
             "env": {},
-            "envFile": "${workspaceFolder}/debug_controller_${env:USER}.env",
-            "args": ["-s", "localhost:4222", "-c", "cntrrunnerdebug", "-l", "agentlive", "-m", "Kubernetes", "-cluster-id", "example-stan"]
+            "args": ["-s", "localhost:4222", "-m", "Kubernetes", "-cluster-id", "example-stan", "-q", "jobqueue"]
+        },
+        {
+            "name": "Launch LiveStream Client",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/livestreamclient",
+            "env": {},
+            "args": ["-s", "localhost:4222", "-l", "agentlive", "-cluster-id", "example-stan"]
+        },
+        {
+            "name": "Launch JobClient Client",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/jobclient",
+            "env": {},
+            "args": ["-s", "localhost:4222", "-q", "jobqueue", "-yaml-definition", "./definition.yaml", "-yaml-parameters", "./parameters.yaml"]
         }
     ]
 }
