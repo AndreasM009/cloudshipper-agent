@@ -2,8 +2,11 @@ package configuration
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 // Runtime configuration
@@ -11,7 +14,10 @@ type Runtime struct {
 	NatsServerConnectionStrings []string
 	NatsStreamingClusterID      string
 	NatsInputSubscription       string
+	NatsPublishSubscription     string
 	IsKubernetes                bool
+	NatsConnectionName          string
+	NatsClientID                string
 }
 
 var usageStr = `
@@ -20,9 +26,10 @@ Options:
 	-m <mode>							Debug or Kubernetes
 	-s <url>							NATS server URL(s) (separated by comma)
 	-cluster-id <cluster id>			NATS streaming cluster id
-	-q <nats job q>						NATS job subscription
+	-q <nats job input subscription>	NATS job input subscription
+	-publish-subscription 				NATS subscription to publish all events
 `
-var mode, natsServerURL, clusterID, inputSubscription string
+var mode, natsServerURL, clusterID, inputSubscription, publishSubscription string
 var theRuntime *Runtime
 
 // NewRuntime new instance
@@ -32,6 +39,7 @@ func NewRuntime() *Runtime {
 		flag.StringVar(&natsServerURL, "s", "", "")
 		flag.StringVar(&clusterID, "cluster-id", "", "")
 		flag.StringVar(&inputSubscription, "q", "", "")
+		flag.StringVar(&publishSubscription, "publish-subscription", "", "")
 		theRuntime = &Runtime{}
 	}
 	return theRuntime
@@ -41,6 +49,12 @@ func NewRuntime() *Runtime {
 func (r *Runtime) FromFlags() {
 	flag.Usage = usage
 	flag.Parse()
+
+	clientID := fmt.Sprintf("cs-ag-cntrl-%s", uuid.New().String())
+	connectionName := clientID
+
+	r.NatsConnectionName = connectionName
+	r.NatsClientID = clientID
 
 	if strings.ToLower(mode) == "kubernetes" {
 		r.loadKubernetes()
@@ -73,9 +87,15 @@ func (r *Runtime) loadKubernetes() {
 		flag.Usage()
 	}
 
+	if publishSubscription == "" {
+		log.Println("no nats subscription to publish events specified")
+		flag.Usage()
+	}
+
 	r.NatsServerConnectionStrings = strings.Split(natsServerURL, ",")
 	r.NatsStreamingClusterID = clusterID
 	r.NatsInputSubscription = inputSubscription
+	r.NatsPublishSubscription = publishSubscription
 }
 
 func (r *Runtime) loadDebug() {
@@ -94,7 +114,13 @@ func (r *Runtime) loadDebug() {
 		flag.Usage()
 	}
 
+	if publishSubscription == "" {
+		log.Println("no nats subscription to publish events specified")
+		flag.Usage()
+	}
+
 	r.NatsServerConnectionStrings = strings.Split(natsServerURL, ",")
 	r.NatsStreamingClusterID = clusterID
 	r.NatsInputSubscription = inputSubscription
+	r.NatsPublishSubscription = publishSubscription
 }

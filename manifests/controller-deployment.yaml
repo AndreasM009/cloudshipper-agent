@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-controller
+  namespace: cs-agent
+  labels:
+    application: cloud-shipper
+    component: agent-controller
+spec:
+  replicas: 2
+  strategy: 
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  minReadySeconds: 5
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      application: cloud-shipper
+      component: agent-controller
+  template:
+    metadata:
+      labels:
+        application: cloud-shipper
+        component: agent-controller
+    spec:
+      serviceAccountName: default
+      containers:
+        - name: agent-controller
+          resources:
+            requests:
+              memory: "16Mi"
+              cpu: "10m"
+            limits:
+              memory: "32Mi"
+              cpu: "30m"
+          image: m009/cs-agent-controller:0.3.9
+          imagePullPolicy: IfNotPresent
+          command: ["./controller"]
+          args: ["-s", "nats://example-nats.default.svc.cluster.local:4222", "-m", "Kubernetes", "-cluster-id", "example-stan", "-q", "jobqueue", "-publish-subscription", "agentevents"]
+      terminationGracePeriodSeconds: 10800

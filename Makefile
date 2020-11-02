@@ -135,7 +135,7 @@ $(foreach ITEM,$(BINARIES),$(eval $(call genBinariesForTarget,$(ITEM)$(BINARY_EX
 CONTROLLER_BIN_EXT:=$(CONTROLLER_BINARY)$(BINARY_EXT)
 build-controller:
 	CGO_ENABLED=$(CGO) GOOS=$(GOOS) GOARCH=$(GOARCH) go build $(GCFLAGS) -ldflags=$(LDFLAGS) \
-	-o $(AGENT_OUT_DIR)/$(CONTROLLER_BIN_EXT) ./cmd/$(CONTROLLER_BINARY)
+	-o $(AGENT_OUT_DIR)/$(CONTROLLER_BIN_EXT) ./cmd/$(CONTROLLER_BINARY)/main.go
 
 ################################################################################
 # Target: build-runner                                                              
@@ -144,7 +144,7 @@ build-controller:
 RUNNER_BIN_EXT:=$(RUNNER_BINARY)$(BINARY_EXT)
 build-runner:
 	CGO_ENABLED=$(CGO) GOOS=$(GOOS) GOARCH=$(GOARCH) go build $(GCFLAGS) -ldflags=$(LDFLAGS) \
-	-o $(AGENT_OUT_DIR)/$(RUNNER_BIN_EXT) ./cmd/$(RUNNER_BINARY)
+	-o $(AGENT_OUT_DIR)/$(RUNNER_BIN_EXT) ./cmd/$(RUNNER_BINARY)/main.go
 
 ################################################################################
 # Target: build-livestreamclient                                                          
@@ -153,7 +153,7 @@ build-runner:
 LCLIENT_BIN_EXT:=$(LIVESTREAMCLIENT_BINARY)$(BINARY_EXT)
 build-livestreamclient:
 	CGO_ENABLED=$(CGO) GOOS=$(GOOS) GOARCH=$(GOARCH) go build $(GCFLAGS) -ldflags=$(LDFLAGS) \
-	-o $(AGENT_OUT_DIR)/$(LCLIENT_BIN_EXT) ./cmd/$(LIVESTREAMCLIENT_BINARY)
+	-o $(AGENT_OUT_DIR)/$(LCLIENT_BIN_EXT) ./cmd/$(LIVESTREAMCLIENT_BINARY)/main.go
 
 ################################################################################
 # Target: build-jobclient                                                          
@@ -162,7 +162,7 @@ build-livestreamclient:
 JOBCLIENT_BIN_EXT:=$(JOBCLIENT_BINARY)$(BINARY_EXT)
 build-jobclient:
 	CGO_ENABLED=$(CGO) GOOS=$(GOOS) GOARCH=$(GOARCH) go build $(GCFLAGS) -ldflags=$(LDFLAGS) \
-	-o $(AGENT_OUT_DIR)/$(JOBCLIENT_BIN_EXT) ./cmd/$(JOBCLIENT_BINARY)
+	-o $(AGENT_OUT_DIR)/$(JOBCLIENT_BIN_EXT) ./cmd/$(JOBCLIENT_BINARY)/main.go
 
 
 ################################################################################

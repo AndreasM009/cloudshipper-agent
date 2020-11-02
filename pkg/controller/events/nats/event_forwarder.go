@@ -10,13 +10,15 @@ import (
 
 // EventForwarder forwards events to nats stream
 type EventForwarder struct {
-	stream *channel.NatsStreamingChannel
+	stream        *channel.NatsStreamingChannel
+	nextForwarder base.EventForwarder
 }
 
 // NewNatsStreamEventForwarder new instance
-func NewNatsStreamEventForwarder(stream *channel.NatsStreamingChannel) base.EventForwarder {
+func NewNatsStreamEventForwarder(stream *channel.NatsStreamingChannel, next base.EventForwarder) base.EventForwarder {
 	return &EventForwarder{
-		stream: stream,
+		stream:        stream,
+		nextForwarder: next,
 	}
 }
 
@@ -27,9 +29,12 @@ func (forwarder *EventForwarder) ForwardDeploymentEvent(evt *base.DeploymentEven
 		fmt.Println("Error forwarding event to nats streaming server")
 	}
 
-	fmt.Println(string(json))
+	//fmt.Println(string(json))
+	forwarder.stream.SnatNativeConnection.Publish(forwarder.stream.NatsPublishName, json)
 
-	forwarder.stream.SnatConnection.Publish(forwarder.stream.NatsPublishName, json)
+	if forwarder.nextForwarder != nil {
+		forwarder.nextForwarder.ForwardDeploymentEvent(evt)
+	}
 }
 
 // ForwardCommandEvent event
@@ -39,7 +44,11 @@ func (forwarder *EventForwarder) ForwardCommandEvent(evt *base.CommandEvent) {
 		fmt.Println("Error forwarding event to nats streaming server")
 	}
 
-	fmt.Println(string(json))
+	//fmt.Println(string(json))
 
-	forwarder.stream.SnatConnection.Publish(forwarder.stream.NatsPublishName, json)
+	forwarder.stream.SnatNativeConnection.Publish(forwarder.stream.NatsPublishName, json)
+
+	if forwarder.nextForwarder != nil {
+		forwarder.nextForwarder.ForwardCommandEvent(evt)
+	}
 }

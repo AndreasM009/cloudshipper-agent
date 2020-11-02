@@ -6,4 +6,5 @@ type Event struct {
 	DeploymentName string `json:"deploymentName"`
 	DeploymentID   string `json:"deplyomentId"`
 	EventName      string `json:"eventName"`
+	TenantID       string `json:"tenantId"`
 }

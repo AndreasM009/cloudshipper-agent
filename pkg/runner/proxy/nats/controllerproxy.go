@@ -40,7 +40,7 @@ func (proxy *ControllerProxy) Report(log logs.LogMessage) error {
 		return err
 	}
 
-	if err := proxy.natsChannel.NatsConn.Publish(proxy.natsChannel.NatsPublishName, json); err != nil {
+	if err := proxy.natsChannel.NatsNativeConn.Publish(proxy.natsChannel.NatsPublishName, json); err != nil {
 		return err
 	}
 
@@ -59,7 +59,7 @@ func (proxy *ControllerProxy) ReportError(exitcode int) error {
 		return err
 	}
 
-	if err := proxy.natsChannel.NatsConn.Publish(proxy.natsChannel.NatsPublishName, json); err != nil {
+	if err := proxy.natsChannel.NatsNativeConn.Publish(proxy.natsChannel.NatsPublishName, json); err != nil {
 		return err
 	}
 
@@ -78,7 +78,7 @@ func (proxy *ControllerProxy) GetAgentCommand() ([]byte, error) {
 		return nil, err
 	}
 
-	msg, err := proxy.natsChannel.NatsConn.Request(proxy.natsChannel.NatsPublishName, json, 60*time.Second)
+	msg, err := proxy.natsChannel.NatsNativeConn.Request(proxy.natsChannel.NatsPublishName, json, 60*time.Second)
 	if err != nil {
 		return nil, err
 	}

@@ -6,6 +6,10 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"sync"
+	"time"
+
+	"github.com/andreasM009/cloudshipper-agent/pkg/controller/events"
 
 	"github.com/andreasM009/cloudshipper-agent/pkg/controller/configuration"
 	"github.com/andreasM009/cloudshipper-agent/pkg/controller/definition"
@@ -14,17 +18,19 @@ import (
 
 	"github.com/andreasM009/cloudshipper-agent/pkg/channel"
 	natsforwarder "github.com/andreasM009/cloudshipper-agent/pkg/controller/events/nats"
-	natsio "github.com/nats-io/nats.go"
+	snatsio "github.com/nats-io/stan.go"
 )
 
 // JobListener listens for jobs to process
 type JobListener struct {
-	NatsChannel *channel.NatsChannel
-	done        chan int
+	NatsStreamingChannel *channel.NatsStreamingChannel
+	done                 chan int
+	eventForwarder       events.EventForwarder
 }
 
 // DeploymentJob job to process
 type DeploymentJob struct {
+	TenantID       string            `json:"tenantId"`
 	DeploymentName string            `json:"deploymentName"`
 	ID             string            `json:"id"`
 	DefinitionID   string            `json:"definitionId"`
@@ -34,20 +40,49 @@ type DeploymentJob struct {
 }
 
 // NewJobListener new instance
-func NewJobListener(natsChannel *channel.NatsChannel) *JobListener {
+func NewJobListener(natsChannel *channel.NatsStreamingChannel, eventForwarder events.EventForwarder) *JobListener {
 	return &JobListener{
-		NatsChannel: natsChannel,
-		done:        make(chan int, 1),
+		NatsStreamingChannel: natsChannel,
+		done:                 make(chan int, 1),
+		eventForwarder:       eventForwarder,
 	}
 }
 
 // StartListeningAsync listens for jobs to
 func (listener *JobListener) StartListeningAsync(ctx context.Context) error {
-	_, err := listener.NatsChannel.NatsConn.Subscribe(listener.NatsChannel.NatsPublishName, func(msg *natsio.Msg) {
+	var wg sync.WaitGroup
+	var mustStop bool = false
+	var isJobRunning bool = false
+	var mtx sync.Mutex
+
+	_, err := listener.NatsStreamingChannel.SnatNativeConnection.QueueSubscribe(listener.NatsStreamingChannel.NatsPublishName, "agents", func(msg *snatsio.Msg) {
+		// check if listener must stop or not
+		mtx.Lock()
+
+		if mustStop {
+			mtx.Unlock()
+			return
+		}
+
+		isJobRunning = true
+		wg.Add(1)
+		mtx.Unlock()
+
+		defer func() {
+			mtx.Lock()
+			defer mtx.Unlock()
+			isJobRunning = false
+		}()
+
+		// now we can run the job, and notify waiter when it is finished
+		defer wg.Done()
+
 		job := DeploymentJob{}
 
+		defer msg.Ack()
+
 		if err := json.Unmarshal(msg.Data, &job); err != nil {
-			// todo, notify subscribers that something is wrong
+			// here we can only log an error, no information available to notify subscribers :-(
 			log.Println(err)
 			return
 		}
@@ -62,48 +97,53 @@ func (listener *JobListener) StartListeningAsync(ctx context.Context) error {
 		// create the definition
 		def, err := definition.NewFromYaml([]byte(yaml))
 		if err != nil {
-			// todo, notify subscribers that something is wrong
 			log.Println(err)
+			listener.forwardErrorInDeploymentEvent(&job)
 			return
 		}
 
 		// create runtime deployment
-		dep, err := definition.NewFromDefinition(def, job.DefinitionID, job.DeploymentName, job.ID, job.Parameters)
+		dep, err := definition.NewFromDefinition(def, job.TenantID, job.DefinitionID, job.DeploymentName, job.ID, job.Parameters)
 		if err != nil {
-			// todo, notify subscribers that something is wrong
 			log.Println(err)
+			listener.forwardErrorInDeploymentEvent(&job)
 			return
 		}
 
 		// load runtime
 		runtime := configuration.NewRuntime()
-		runtime.FromFlags()
 
 		// channels to runner
-		runnerChannel, err := channel.NewNatsChannel(job.ID, runtime.NatsServerConnectionStrings, fmt.Sprintf("%s-cntrl", job.ID))
+		runnerChannel, err := channel.NewNatsChannelFromPool(job.ID, runtime.NatsConnectionName)
 		if err != nil {
-			log.Panic(err)
+			log.Println(err)
+			listener.forwardErrorInDeploymentEvent(&job)
+			return
 		}
 
 		defer runnerChannel.Close()
 
-		// live stream
-		liveStream, err := channel.NewNatsStreamingChannel(job.LiveStreamName, runtime.NatsServerConnectionStrings, fmt.Sprintf("%s-live-cntrl", job.LiveStreamName), runtime.NatsStreamingClusterID, fmt.Sprintf("%s-live-cntrl", job.LiveStreamName))
+		// live stream channel
+		liveStream, err := channel.NewNatsStreamingChannelFromPool(job.LiveStreamName, runtime.NatsStreamingClusterID, runtime.NatsClientID)
 		if err != nil {
-			log.Panic(err)
+			log.Println(err)
+			listener.forwardErrorInDeploymentEvent(&job)
+			return
 		}
 
 		defer liveStream.Close()
 
 		// forwarder
-		forwarder := natsforwarder.NewNatsStreamEventForwarder(liveStream)
+		forwarder := natsforwarder.NewNatsStreamEventForwarder(liveStream, listener.eventForwarder)
 
 		// Command processor
 		proc := processor.NewCommandProcessor(runnerChannel, dep, forwarder)
 
 		err = proc.ProcessAsync()
 		if err != nil {
-			log.Panic(err)
+			log.Println(err)
+			listener.forwardErrorInDeploymentEvent(&job)
+			return
 		}
 
 		if runtime.IsKubernetes {
@@ -111,7 +151,10 @@ func (listener *JobListener) StartListeningAsync(ctx context.Context) error {
 			k8sclient := runner.CreateKubeClient()
 
 			if k8sclient == nil {
-				log.Panic()
+				log.Println("Unable to start runner pod")
+				listener.forwardErrorInDeploymentEvent(&job)
+				// Todo: cancel processor
+				return
 			}
 
 			runnerCtx, cancelRunner := context.WithCancel(context.Background())
@@ -119,7 +162,8 @@ func (listener *JobListener) StartListeningAsync(ctx context.Context) error {
 
 			k8srunner, err := runner.CreateAndWatchRunnerPod(runnerCtx, k8sclient, job.ID)
 			if err != nil {
-				log.Panic(err)
+				// Todo: cancel processor
+				log.Println(fmt.Sprintf("Failed to start and watch runnerpod: %s", err))
 			}
 
 			select {
@@ -130,18 +174,33 @@ func (listener *JobListener) StartListeningAsync(ctx context.Context) error {
 				return
 			case err := <-k8srunner.Error():
 				if err != nil {
-					log.Panic(err)
+					log.Println(fmt.Sprintf("Unexpected error in runner pod: %s", err))
 				}
 			}
 		} else {
 			exitcode := <-proc.Done()
-			fmt.Println(fmt.Sprintf("Runner finished with exitcode: %d", exitcode))
+			log.Println(fmt.Sprintf("Runner finished with exitcode: %d", exitcode))
 		}
-	})
+	}, snatsio.DurableName("agent"), snatsio.SetManualAckMode(), snatsio.MaxInflight(1), snatsio.AckWait(time.Hour*12))
 
 	if err != nil {
 		return err
 	}
+
+	// wait until controller must stop
+	go func() {
+		<-ctx.Done()
+		mtx.Lock()
+		mustStop = true
+		if isJobRunning {
+			mtx.Unlock()
+			wg.Wait()
+		} else {
+			mtx.Unlock()
+		}
+
+		listener.done <- -1
+	}()
 
 	return nil
 }
@@ -149,4 +208,20 @@ func (listener *JobListener) StartListeningAsync(ctx context.Context) error {
 // Done done listening channel
 func (listener *JobListener) Done() <-chan int {
 	return listener.done
+}
+
+func (listener *JobListener) forwardErrorInDeploymentEvent(job *DeploymentJob) {
+	evt := events.DeploymentEvent{
+		Event: events.Event{
+			DeploymentName: job.DeploymentName,
+			DefinitionID:   job.DefinitionID,
+			DeploymentID:   job.DefinitionID,
+			EventName:      "deploymentEvent",
+		},
+		Started:  false,
+		Finished: true,
+		Exitcode: -1,
+	}
+
+	listener.eventForwarder.ForwardDeploymentEvent(&evt)
 }

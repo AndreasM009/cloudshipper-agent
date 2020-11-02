@@ -36,7 +36,7 @@ func (stub *RunnerStub) SetHandler(healthy base.HealthyHandler, cancellation bas
 // StartListeningAndBlock starts listening for controller messages and block calling thread
 func (stub *RunnerStub) StartListeningAndBlock(ctx context.Context, commandrunner <-chan int) error {
 
-	stub.channel.NatsConn.Subscribe(stub.channel.NatsPublishName, func(msg *natsio.Msg) {
+	stub.channel.NatsNativeConn.Subscribe(stub.channel.NatsPublishName, func(msg *natsio.Msg) {
 		carrier := requests.RequestCarrier{}
 
 		if err := json.Unmarshal(msg.Data, &carrier); err != nil {

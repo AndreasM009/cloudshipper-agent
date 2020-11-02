@@ -17,7 +17,7 @@ RUN adduser \
     "${USER}"
 
 WORKDIR /
-# crrent directory must be project root evenstore-service-go
+# current directory must be project root evenstore-service-go
 COPY . ./
 
 RUN mkdir -p /dist/linux_amd64/release

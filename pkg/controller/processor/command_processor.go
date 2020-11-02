@@ -49,7 +49,8 @@ func (processor *CommandProcessor) ProcessAsync() error {
 
 	processor.eventForwarder.ForwardDeploymentEvent(processor.createDeploymentEvent(true, false, 0))
 
-	_, err := processor.channel.NatsConn.Subscribe(processor.channel.NatsPublishName, func(msg *natsio.Msg) {
+	// subscribe to controller and runner msg channel and wait for runner requests
+	_, err := processor.channel.NatsNativeConn.Subscribe(processor.channel.NatsPublishName, func(msg *natsio.Msg) {
 		requestType, runnerRequest, err := getRequestFromStream(msg.Data)
 		if err != nil {
 			processor.eventForwarder.ForwardDeploymentEvent(processor.createDeploymentEvent(false, true, 1))
@@ -161,6 +162,7 @@ func (processor *CommandProcessor) createCommandEvent(l *logs.LogMessage) *event
 			DeploymentID:   processor.runtimeDefinition.ID,
 			DeploymentName: processor.runtimeDefinition.DeploymentName,
 			EventName:      "commandEvent",
+			TenantID:       processor.runtimeDefinition.TenantID,
 		},
 		JobName:            job.Name,
 		JobDisplayName:     job.Displayname,
@@ -204,6 +206,7 @@ func (processor *CommandProcessor) createDeploymentEvent(started, finished bool,
 			DeploymentID:   processor.runtimeDefinition.ID,
 			DeploymentName: processor.runtimeDefinition.DeploymentName,
 			EventName:      "deploymentEvent",
+			TenantID:       processor.runtimeDefinition.TenantID,
 		},
 		Jobs:     jobs,
 		Started:  started,

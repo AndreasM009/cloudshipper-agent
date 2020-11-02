@@ -25,16 +25,18 @@ type RuntimeJob struct {
 type RuntimeDeployment struct {
 	DeploymentName string
 	ID             string
+	TenantID       string
 	Parameters     map[string]string
 	Jobs           []*RuntimeJob
 	DefinitionID   string
 }
 
 // NewFromDefinition new from definition
-func NewFromDefinition(deployment *Deployment, definitionID, name, id string, parameters map[string]string) (*RuntimeDeployment, error) {
+func NewFromDefinition(deployment *Deployment, tenantID, definitionID, name, id string, parameters map[string]string) (*RuntimeDeployment, error) {
 	rd := &RuntimeDeployment{
 		DeploymentName: name,
 		ID:             id,
+		TenantID:       tenantID,
 		Parameters:     parameters,
 		Jobs:           make([]*RuntimeJob, len(deployment.Jobs)),
 		DefinitionID:   definitionID,

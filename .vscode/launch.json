@@ -22,7 +22,13 @@
             "mode": "auto",
             "program": "${workspaceFolder}/cmd/controller",
             "env": {},
-            "args": ["-s", "localhost:4222", "-m", "Kubernetes", "-cluster-id", "example-stan", "-q", "jobqueue"]
+            "args": [
+                "-s", "localhost:4222", 
+                "-m", "Kubernetes", 
+                "-cluster-id", "example-stan", 
+                "-q", "jobqueue", 
+                "-publish-subscription",
+                "agentevents"]
         },
         {
             "name": "Launch LiveStream Client",
@@ -40,7 +46,7 @@
             "mode": "auto",
             "program": "${workspaceFolder}/cmd/jobclient",
             "env": {},
-            "args": ["-s", "localhost:4222", "-q", "jobqueue", "-yaml-definition", "./definition.yaml", "-yaml-parameters", "./parameters.yaml"]
+            "args": ["-s", "localhost:4222", "-cluster-id", "example-stan", "-q", "jobqueue", "-yaml-definition", "./definition.yaml", "-yaml-parameters", "./parameters.yaml"]
         }
     ]
 }

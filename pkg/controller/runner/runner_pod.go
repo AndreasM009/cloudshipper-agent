@@ -41,7 +41,7 @@ func CreateAndWatchRunnerPod(ctx context.Context, k8sclient *kubernetes.Clientse
 			Containers: []corev1.Container{
 				corev1.Container{
 					Name:            "runnercntr",
-					Image:           "m009/cs-agent-runner:0.2.0",
+					Image:           "m009/cs-agent-runner:latest",
 					ImagePullPolicy: corev1.PullAlways,
 					Env: []corev1.EnvVar{
 						corev1.EnvVar{
@@ -92,13 +92,13 @@ func CreateAndWatchRunnerPod(ctx context.Context, k8sclient *kubernetes.Clientse
 				return
 			case events, ok := <-w.ResultChan():
 				if ok {
-					resp := events.Object.(*corev1.Pod)
-
-					if resp.Status.Phase == corev1.PodFailed {
-						w.Stop()
-						deletePod()
-						r.errorChan <- errors.New("runner pod failed")
-						return
+					if resp, ok := events.Object.(*corev1.Pod); ok {
+						if resp.Status.Phase == corev1.PodFailed {
+							w.Stop()
+							deletePod()
+							r.errorChan <- errors.New("runner pod failed")
+							return
+						}
 					}
 				}
 			}

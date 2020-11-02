@@ -51,7 +51,7 @@ func TestRuntimeDefinitionFromDeployment(t *testing.T) {
 	definitionParams["param1"] = "value1"
 	definitionParams["param2"] = "value2"
 
-	runtimeDefinition, err := NewFromDefinition(definition, "1", "test", "1", definitionParams)
+	runtimeDefinition, err := NewFromDefinition(definition, "t1", "1", "test", "1", definitionParams)
 
 	assert.Nil(t, err)
 	assert.NotNil(t, runtimeDefinition)

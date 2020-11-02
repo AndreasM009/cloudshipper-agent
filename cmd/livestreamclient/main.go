@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -57,6 +56,7 @@ func main() {
 
 			if strings.ToLower(evtName) == "deploymentevent" {
 				dpl := struct {
+					TenantID       string `json:"tenantId"`
 					DeploymentName string `json:"deploymentName"`
 					Started        bool   `json:"started"`
 					Finished       bool   `json:"finished"`
@@ -65,9 +65,11 @@ func main() {
 
 				if err := json.Unmarshal(msg.Data, &dpl); err == nil {
 					if dpl.Started {
-						log.Println("Deployment:", dpl.DeploymentName, "started")
+						log.Println("*******************************************")
+						log.Println("Deployment:", dpl.DeploymentName, "for tenant:", dpl.TenantID, "started")
+						log.Println("*******************************************")
 					} else if dpl.Finished {
-						log.Println("Deployment:", dpl.DeploymentName, "finished:", dpl.Exitcode)
+						log.Println("Deployment:", dpl.DeploymentName, "for tenant:", dpl.TenantID, "finished:", dpl.Exitcode)
 					}
 				}
 
@@ -80,13 +82,13 @@ func main() {
 				}{}
 
 				if err := json.Unmarshal(msg.Data, &cmd); err == nil {
-					fmt.Print(cmd.CommandDisplayName, ":", cmd.Logs[0].Message)
+					//fmt.Print(cmd.CommandDisplayName, ":", cmd.Logs[0].Message)
 				}
 			}
 		}
 	}
 
-	sub, err := streamingChannel.SnatConnection.Subscribe(streamingChannel.NatsPublishName, handler, startOpt)
+	sub, err := streamingChannel.SnatNativeConnection.Subscribe(streamingChannel.NatsPublishName, handler, startOpt)
 	if err != nil {
 		log.Panic(err)
 	}
