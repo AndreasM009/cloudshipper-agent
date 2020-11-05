@@ -10,7 +10,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/andreasM009/cloudshipper-agent/pkg/channel"
+	"github.com/andreasM009/nats-library/channel"
 	"gopkg.in/yaml.v2"
 )
 

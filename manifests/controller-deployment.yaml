@@ -35,7 +35,7 @@ spec:
             limits:
               memory: "32Mi"
               cpu: "30m"
-          image: m009/cs-agent-controller:0.3.9
+          image: m009/cs-agent-controller:0.3.10
           imagePullPolicy: IfNotPresent
           command: ["./controller"]
           args: ["-s", "nats://example-nats.default.svc.cluster.local:4222", "-m", "Kubernetes", "-cluster-id", "example-stan", "-q", "jobqueue", "-publish-subscription", "agentevents"]

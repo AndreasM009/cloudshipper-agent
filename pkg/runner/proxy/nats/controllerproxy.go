@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/andreasM009/cloudshipper-agent/pkg/channel"
 	"github.com/andreasM009/cloudshipper-agent/pkg/requests"
+	"github.com/andreasM009/nats-library/channel"
 
 	"github.com/andreasM009/cloudshipper-agent/pkg/logs"
 	"github.com/andreasM009/cloudshipper-agent/pkg/runner/proxy"

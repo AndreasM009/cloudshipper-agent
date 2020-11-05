@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/andreasM009/cloudshipper-agent/pkg/channel"
 	base "github.com/andreasM009/cloudshipper-agent/pkg/controller/events"
+	"github.com/andreasM009/nats-library/channel"
 )
 
 // EventForwarder forwards events to nats stream

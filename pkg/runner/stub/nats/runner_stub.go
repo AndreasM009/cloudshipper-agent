@@ -7,8 +7,8 @@ import (
 
 	"github.com/andreasM009/cloudshipper-agent/pkg/requests"
 
-	"github.com/andreasM009/cloudshipper-agent/pkg/channel"
 	base "github.com/andreasM009/cloudshipper-agent/pkg/runner/stub"
+	"github.com/andreasM009/nats-library/channel"
 	natsio "github.com/nats-io/nats.go"
 )
 

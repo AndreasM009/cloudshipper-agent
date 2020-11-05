@@ -9,8 +9,8 @@ import (
 	"syscall"
 
 	natsevents "github.com/andreasM009/cloudshipper-agent/pkg/controller/events/nats"
+	"github.com/andreasM009/nats-library/channel"
 
-	"github.com/andreasM009/cloudshipper-agent/pkg/channel"
 	"github.com/andreasM009/cloudshipper-agent/pkg/commands/azure"
 	"github.com/andreasM009/cloudshipper-agent/pkg/controller"
 	"github.com/andreasM009/cloudshipper-agent/pkg/controller/configuration"

@@ -13,8 +13,8 @@ import (
 
 	"github.com/andreasM009/cloudshipper-agent/pkg/commands"
 
-	"github.com/andreasM009/cloudshipper-agent/pkg/channel"
 	"github.com/andreasM009/cloudshipper-agent/pkg/controller/definition"
+	"github.com/andreasM009/nats-library/channel"
 
 	natsio "github.com/nats-io/nats.go"
 )

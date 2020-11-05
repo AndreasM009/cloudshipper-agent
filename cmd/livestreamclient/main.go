@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -12,7 +13,7 @@ import (
 	"github.com/nats-io/stan.go"
 	"github.com/nats-io/stan.go/pb"
 
-	"github.com/andreasM009/cloudshipper-agent/pkg/channel"
+	"github.com/andreasM009/nats-library/channel"
 )
 
 var usageStr = `
@@ -82,7 +83,7 @@ func main() {
 				}{}
 
 				if err := json.Unmarshal(msg.Data, &cmd); err == nil {
-					//fmt.Print(cmd.CommandDisplayName, ":", cmd.Logs[0].Message)
+					fmt.Print(cmd.CommandDisplayName, ":", cmd.Logs[0].Message)
 				}
 			}
 		}

@@ -16,8 +16,8 @@ import (
 	"github.com/andreasM009/cloudshipper-agent/pkg/controller/processor"
 	"github.com/andreasM009/cloudshipper-agent/pkg/controller/runner"
 
-	"github.com/andreasM009/cloudshipper-agent/pkg/channel"
 	natsforwarder "github.com/andreasM009/cloudshipper-agent/pkg/controller/events/nats"
+	"github.com/andreasM009/nats-library/channel"
 	snatsio "github.com/nats-io/stan.go"
 )
 
