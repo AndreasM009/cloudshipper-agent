@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/nats-io/stan.go"
 	"github.com/nats-io/stan.go/pb"
@@ -57,33 +58,35 @@ func main() {
 
 			if strings.ToLower(evtName) == "deploymentevent" {
 				dpl := struct {
-					TenantID       string `json:"tenantId"`
-					DeploymentName string `json:"deploymentName"`
-					Started        bool   `json:"started"`
-					Finished       bool   `json:"finished"`
-					Exitcode       int    `json:"exitcode"`
+					TenantID       string    `json:"tenantId"`
+					DeploymentName string    `json:"deploymentName"`
+					Started        bool      `json:"started"`
+					Finished       bool      `json:"finished"`
+					Exitcode       int       `json:"exitcode"`
+					Timestamp      time.Time `json:"timestamp"`
 				}{}
 
 				if err := json.Unmarshal(msg.Data, &dpl); err == nil {
 					if dpl.Started {
 						log.Println("*******************************************")
-						log.Println("Deployment:", dpl.DeploymentName, "for tenant:", dpl.TenantID, "started")
+						log.Println("Deployment:", dpl.DeploymentName, "for tenant:", dpl.TenantID, "started at ", dpl.Timestamp)
 						log.Println("*******************************************")
 					} else if dpl.Finished {
-						log.Println("Deployment:", dpl.DeploymentName, "for tenant:", dpl.TenantID, "finished:", dpl.Exitcode)
+						log.Println("Deployment:", dpl.DeploymentName, "for tenant:", dpl.TenantID, "finished: exitcode ", dpl.Exitcode, " time ", dpl.Timestamp)
 					}
 				}
 
 			} else if strings.ToLower(evtName) == "commandevent" {
 				cmd := struct {
-					CommandDisplayName string `json:"commandDisplayName"`
+					CommandDisplayName string    `json:"commandDisplayName"`
+					Timestamp          time.Time `json:"timestamp"`
 					Logs               []struct {
 						Message string `json:"message"`
 					} `json:"logs"`
 				}{}
 
 				if err := json.Unmarshal(msg.Data, &cmd); err == nil {
-					fmt.Print(cmd.CommandDisplayName, ":", cmd.Logs[0].Message)
+					fmt.Println(cmd.Timestamp, " ", cmd.CommandDisplayName, ":", cmd.Logs[0].Message)
 				}
 			}
 		}

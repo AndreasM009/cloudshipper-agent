@@ -19,7 +19,7 @@ Usage: runner [options]
 Options:
 	-s <url>							NATS server URL(s) (separated by comma)
 	-q <job queue>						NATS streaming channel for jobs to enqueue
-	-cluster-id <cluster id>				NATS streaming server cluster id
+	-cluster-id <cluster id>			NATS streaming server cluster id
 	-yaml-definition <yaml definition>	Path to Yaml definition file
 	-yaml-parameters					Path to yaml parameters file
 `

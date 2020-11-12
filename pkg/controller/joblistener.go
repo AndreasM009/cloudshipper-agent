@@ -113,8 +113,13 @@ func (listener *JobListener) StartListeningAsync(ctx context.Context) error {
 		// load runtime
 		runtime := configuration.NewRuntime()
 
-		// channels to runner
-		runnerChannel, err := channel.NewNatsChannelFromPool(job.ID, runtime.NatsConnectionName)
+		// channel to runner
+		runnerChannelName := job.ID
+		if runtime.IsDebug {
+			runnerChannelName = runtime.DebugRunnerChannelName
+		}
+
+		runnerChannel, err := channel.NewNatsChannelFromPool(runnerChannelName, runtime.NatsConnectionName)
 		if err != nil {
 			log.Println(err)
 			listener.forwardErrorInDeploymentEvent(&job)
@@ -177,7 +182,7 @@ func (listener *JobListener) StartListeningAsync(ctx context.Context) error {
 					log.Println(fmt.Sprintf("Unexpected error in runner pod: %s", err))
 				}
 			}
-		} else {
+		} else if runtime.IsDebug {
 			exitcode := <-proc.Done()
 			log.Println(fmt.Sprintf("Runner finished with exitcode: %d", exitcode))
 		}

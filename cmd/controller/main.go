@@ -28,6 +28,8 @@ func main() {
 		log.Panic(err)
 	}
 
+	defer natsConnection.Close()
+
 	if err := channel.GetNatsConnectionPoolInstance().Add(runtime.NatsConnectionName, natsConnection); err != nil {
 		log.Panic(err)
 	}
@@ -44,6 +46,8 @@ func main() {
 		log.Panic(err)
 	}
 
+	defer snatsConnection.Close()
+
 	// job input stream
 	input, err := channel.NewNatsStreamingChannelFromPool(runtime.NatsInputSubscription, runtime.NatsStreamingClusterID, runtime.NatsClientID)
 
@@ -53,7 +57,7 @@ func main() {
 
 	defer input.Close()
 
-	// publish events channel
+	// publish events channel, channel to stream all events of all agents
 	publish, err := channel.NewNatsStreamingChannelFromPool(runtime.NatsPublishSubscription, runtime.NatsStreamingClusterID, runtime.NatsClientID)
 
 	if err != nil {

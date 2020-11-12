@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"time"
 
 	"github.com/andreasM009/cloudshipper-agent/pkg/requests"
 
@@ -27,6 +28,7 @@ type CommandProcessor struct {
 	currentJobIdx     int
 	currentCommandIdx int
 	eventForwarder    events.EventForwarder
+	subscription      *natsio.Subscription
 }
 
 // NewCommandProcessor new instance
@@ -50,7 +52,7 @@ func (processor *CommandProcessor) ProcessAsync() error {
 	processor.eventForwarder.ForwardDeploymentEvent(processor.createDeploymentEvent(true, false, 0))
 
 	// subscribe to controller and runner msg channel and wait for runner requests
-	_, err := processor.channel.NatsNativeConn.Subscribe(processor.channel.NatsPublishName, func(msg *natsio.Msg) {
+	sub, err := processor.channel.NatsNativeConn.Subscribe(processor.channel.NatsPublishName, func(msg *natsio.Msg) {
 		requestType, runnerRequest, err := getRequestFromStream(msg.Data)
 		if err != nil {
 			processor.eventForwarder.ForwardDeploymentEvent(processor.createDeploymentEvent(false, true, 1))
@@ -69,23 +71,30 @@ func (processor *CommandProcessor) ProcessAsync() error {
 			if processor.currentCommandIdx >= len(job.Commands) {
 				msg.Respond(nil)
 				processor.eventForwarder.ForwardDeploymentEvent(processor.createDeploymentEvent(false, true, 0))
+				processor.subscription.Unsubscribe()
 				processor.finishedChannel <- 0
 				return
 			}
 
 			step := job.Commands[processor.currentCommandIdx]
 			if err := replyNextCommand(step.CommandType, &step.Command, msg); err != nil {
-				log.Panic(err)
+				processor.subscription.Unsubscribe()
+				log.Println(err)
+				processor.finishedChannel <- 1
+				return
 			}
 
 		case requests.ControllerReportCommandError:
 			if rq, ok := runnerRequest.(*requests.ControllerReportErrorRequest); ok {
 				processor.eventForwarder.ForwardDeploymentEvent(processor.createDeploymentEvent(false, true, rq.Exitcode))
+				processor.subscription.Unsubscribe()
 				processor.finishedChannel <- rq.Exitcode
 				return
 			}
 		}
 	})
+
+	processor.subscription = sub
 
 	return err
 }
@@ -163,6 +172,7 @@ func (processor *CommandProcessor) createCommandEvent(l *logs.LogMessage) *event
 			DeploymentName: processor.runtimeDefinition.DeploymentName,
 			EventName:      "commandEvent",
 			TenantID:       processor.runtimeDefinition.TenantID,
+			Timestamp:      time.Now(),
 		},
 		JobName:            job.Name,
 		JobDisplayName:     job.Displayname,
@@ -207,6 +217,7 @@ func (processor *CommandProcessor) createDeploymentEvent(started, finished bool,
 			DeploymentName: processor.runtimeDefinition.DeploymentName,
 			EventName:      "deploymentEvent",
 			TenantID:       processor.runtimeDefinition.TenantID,
+			Timestamp:      time.Now(),
 		},
 		Jobs:     jobs,
 		Started:  started,

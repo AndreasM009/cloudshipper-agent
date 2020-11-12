@@ -15,7 +15,11 @@ type Runtime struct {
 	NatsStreamingClusterID      string
 	NatsInputSubscription       string
 	NatsPublishSubscription     string
+	RunnerExecutableFilePath    string
+	DebugRunnerChannelName      string
 	IsKubernetes                bool
+	IsDebug                     bool
+	IsStandalone                bool
 	NatsConnectionName          string
 	NatsClientID                string
 }
@@ -23,13 +27,15 @@ type Runtime struct {
 var usageStr = `
 Usage: runner [options]
 Options:
-	-m <mode>							Debug or Kubernetes
-	-s <url>							NATS server URL(s) (separated by comma)
-	-cluster-id <cluster id>			NATS streaming cluster id
-	-q <nats job input subscription>	NATS job input subscription
-	-publish-subscription 				NATS subscription to publish all events
+	-m <mode>									Debug, Standalone or Kubernetes
+	-s <url>									NATS server URL(s) (separated by comma)
+	-cluster-id <cluster id>					NATS streaming cluster id
+	-q <nats job input subscription>			NATS job input subscription
+	-publish-subscription 						NATS subscription to publish all events
+	-rp-standalone Path to runner executable	Path to runner executable for mode Standalone only
+	-rcn-debug Name of NATS channel to runner	Name of NATS channel to runner for mode Debug
 `
-var mode, natsServerURL, clusterID, inputSubscription, publishSubscription string
+var mode, natsServerURL, clusterID, inputSubscription, publishSubscription, runnerexecutable, debugrunnerchannel string
 var theRuntime *Runtime
 
 // NewRuntime new instance
@@ -40,6 +46,8 @@ func NewRuntime() *Runtime {
 		flag.StringVar(&clusterID, "cluster-id", "", "")
 		flag.StringVar(&inputSubscription, "q", "", "")
 		flag.StringVar(&publishSubscription, "publish-subscription", "", "")
+		flag.StringVar(&runnerexecutable, "rp-standalone", "", "")
+		flag.StringVar(&debugrunnerchannel, "rcn-debug", "", "")
 		theRuntime = &Runtime{}
 	}
 	return theRuntime
@@ -58,6 +66,8 @@ func (r *Runtime) FromFlags() {
 
 	if strings.ToLower(mode) == "kubernetes" {
 		r.loadKubernetes()
+	} else if strings.ToLower(mode) == "standalone" {
+		r.loadStandalone()
 	} else if strings.ToLower(mode) == "debug" {
 		r.loadDebug()
 	} else {
@@ -96,6 +106,45 @@ func (r *Runtime) loadKubernetes() {
 	r.NatsStreamingClusterID = clusterID
 	r.NatsInputSubscription = inputSubscription
 	r.NatsPublishSubscription = publishSubscription
+	r.IsDebug = false
+	r.IsKubernetes = true
+	r.IsStandalone = false
+}
+
+func (r *Runtime) loadStandalone() {
+	if natsServerURL == "" {
+		log.Println("no nats server urls specified")
+		flag.Usage()
+	}
+
+	if clusterID == "" {
+		log.Println("no nats streaming cluster id specified")
+		flag.Usage()
+	}
+
+	if inputSubscription == "" {
+		log.Println("no nats job input subscription specified")
+		flag.Usage()
+	}
+
+	if publishSubscription == "" {
+		log.Println("no nats subscription to publish events specified")
+		flag.Usage()
+	}
+
+	if runnerexecutable == "" {
+		log.Println("no file path to runner executable specified")
+		flag.Usage()
+	}
+
+	r.NatsServerConnectionStrings = strings.Split(natsServerURL, ",")
+	r.NatsStreamingClusterID = clusterID
+	r.NatsInputSubscription = inputSubscription
+	r.NatsPublishSubscription = publishSubscription
+	r.RunnerExecutableFilePath = runnerexecutable
+	r.IsDebug = false
+	r.IsKubernetes = false
+	r.IsStandalone = true
 }
 
 func (r *Runtime) loadDebug() {
@@ -119,8 +168,16 @@ func (r *Runtime) loadDebug() {
 		flag.Usage()
 	}
 
+	if debugrunnerchannel == "" {
+		log.Println("no runner channel name specified for debug mode")
+	}
+
 	r.NatsServerConnectionStrings = strings.Split(natsServerURL, ",")
 	r.NatsStreamingClusterID = clusterID
 	r.NatsInputSubscription = inputSubscription
 	r.NatsPublishSubscription = publishSubscription
+	r.DebugRunnerChannelName = debugrunnerchannel
+	r.IsDebug = true
+	r.IsKubernetes = false
+	r.IsStandalone = false
 }
