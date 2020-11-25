@@ -23,8 +23,9 @@ Options:
 	-s <url>							NATS server URL(s) (separated by comma)
 	-l <live streaming channel name>	NATS streaming channel for live logs
 	-cluster-id <cluster id>			NATS streaming cluster id
+	-t <NAT auth token>					NATS auth token if needed
 `
-var natsServerURL, liveChannelName, clusterID string
+var natsServerURL, liveChannelName, clusterID, natsToken string
 
 func usage() {
 	log.Fatalf(usageStr)
@@ -34,11 +35,12 @@ func main() {
 	flag.StringVar(&natsServerURL, "s", "", "")
 	flag.StringVar(&liveChannelName, "l", "", "")
 	flag.StringVar(&clusterID, "cluster-id", "", "")
+	flag.StringVar(&natsToken, "t", "", "")
 
 	flag.Usage = usage
 	flag.Parse()
 
-	streamingChannel, err := channel.NewNatsStreamingChannel(liveChannelName, strings.Split(natsServerURL, ","), "livestream-client", clusterID, "livestream-client")
+	streamingChannel, err := channel.NewNatsStreamingChannel(liveChannelName, strings.Split(natsServerURL, ","), "livestream-client", clusterID, "livestream-client", natsToken)
 	if err != nil {
 		log.Panic(err)
 	}

@@ -2,7 +2,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   namespace: cs-agent
-  name: agent-controller
+  name: hosted-agent
 rules:
 - apiGroups: [""] # "" indicates the core API group
   resources: ["pods"]

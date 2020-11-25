@@ -111,7 +111,7 @@ func (listener *JobListener) StartListeningAsync(ctx context.Context) error {
 		}
 
 		// load runtime
-		runtime := configuration.NewRuntime()
+		runtime := configuration.GetRuntime()
 
 		// channel to runner
 		runnerChannelName := job.ID
@@ -175,11 +175,12 @@ func (listener *JobListener) StartListeningAsync(ctx context.Context) error {
 			case exitcode := <-proc.Done():
 				cancelRunner()
 				<-k8srunner.Error()
-				fmt.Println(fmt.Sprintf("Runner finished with exitcode: %d", exitcode))
+				log.Println(fmt.Sprintf("Runner finished with exitcode: %d", exitcode))
 				return
 			case err := <-k8srunner.Error():
 				if err != nil {
 					log.Println(fmt.Sprintf("Unexpected error in runner pod: %s", err))
+					// TODO: Notify all that deployment FAILED!!!!!
 				}
 			}
 		} else if runtime.IsDebug {

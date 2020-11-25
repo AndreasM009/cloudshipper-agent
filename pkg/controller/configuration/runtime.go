@@ -3,6 +3,7 @@ package configuration
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"strings"
 
@@ -22,6 +23,7 @@ type Runtime struct {
 	IsStandalone                bool
 	NatsConnectionName          string
 	NatsClientID                string
+	NatsToken                   string
 }
 
 var usageStr = `
@@ -34,12 +36,13 @@ Options:
 	-publish-subscription 						NATS subscription to publish all events
 	-rp-standalone Path to runner executable	Path to runner executable for mode Standalone only
 	-rcn-debug Name of NATS channel to runner	Name of NATS channel to runner for mode Debug
+	-nats-token-filepath						Path to file containing NATS Auth token, if NATS requires authentication
 `
-var mode, natsServerURL, clusterID, inputSubscription, publishSubscription, runnerexecutable, debugrunnerchannel string
+var mode, natsServerURL, clusterID, inputSubscription, publishSubscription, runnerexecutable, debugrunnerchannel, natstokenfile string
 var theRuntime *Runtime
 
-// NewRuntime new instance
-func NewRuntime() *Runtime {
+// GetRuntime new instance
+func GetRuntime() *Runtime {
 	if nil == theRuntime {
 		flag.StringVar(&mode, "m", "Kubernetes", "")
 		flag.StringVar(&natsServerURL, "s", "", "")
@@ -48,6 +51,7 @@ func NewRuntime() *Runtime {
 		flag.StringVar(&publishSubscription, "publish-subscription", "", "")
 		flag.StringVar(&runnerexecutable, "rp-standalone", "", "")
 		flag.StringVar(&debugrunnerchannel, "rcn-debug", "", "")
+		flag.StringVar(&natstokenfile, "nats-token-filepath", "", "")
 		theRuntime = &Runtime{}
 	}
 	return theRuntime
@@ -72,6 +76,16 @@ func (r *Runtime) FromFlags() {
 		r.loadDebug()
 	} else {
 		flag.Usage()
+	}
+
+	if natstokenfile != "" {
+		data, err := ioutil.ReadFile(natstokenfile)
+		if err != nil {
+			log.Println(fmt.Sprintf("nats token file specified, but could not be read: %s", err))
+			flag.Usage()
+		}
+
+		r.NatsToken = string(data)
 	}
 }
 

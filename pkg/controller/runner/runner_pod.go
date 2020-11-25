@@ -7,6 +7,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/andreasM009/cloudshipper-agent/pkg/controller/configuration"
 	"k8s.io/apimachinery/pkg/labels"
 
 	corev1 "k8s.io/api/core/v1"
@@ -25,6 +26,9 @@ func CreateAndWatchRunnerPod(ctx context.Context, k8sclient *kubernetes.Clientse
 	r := &K8sRunnerPod{
 		errorChan: make(chan error, 1),
 	}
+
+	//natsServers := strings.Join(configuration.GetRuntime().NatsServerConnectionStrings, ",")
+	natsToken := configuration.GetRuntime().NatsToken
 
 	name := fmt.Sprintf("runner-%s", natsChannelName)
 
@@ -51,8 +55,10 @@ func CreateAndWatchRunnerPod(ctx context.Context, k8sclient *kubernetes.Clientse
 					},
 					Command: []string{"./runner"},
 					Args: []string{
-						fmt.Sprintf("-s=%s", "nats://example-nats.default.svc.cluster.local:4222"),
+						//fmt.Sprintf("-s=%s", natsServers),
+						fmt.Sprintf("-s=%s", "nats://cloudshipper-nats.nats.svc.cluster.local:4222"),
 						fmt.Sprintf("-c=%s", natsChannelName),
+						fmt.Sprintf("-t=%s", natsToken),
 					},
 				},
 			},
@@ -65,7 +71,7 @@ func CreateAndWatchRunnerPod(ctx context.Context, k8sclient *kubernetes.Clientse
 		log.Panic(err)
 	}
 
-	fmt.Println("RunnerPod status:", resp.Status.Phase)
+	log.Println("RunnerPod status:", resp.Status.Phase)
 
 	w, err := k8sclient.CoreV1().Pods("cs-agent").Watch(ctx, metav1.ListOptions{
 		Watch:           true,
@@ -118,7 +124,7 @@ func CreateAndWatchRunnerPod(ctx context.Context, k8sclient *kubernetes.Clientse
 			}
 
 			resp := events.Object.(*corev1.Pod)
-			fmt.Println("RunnerPod status:", resp.Status.Phase)
+			log.Println("RunnerPod status:", resp.Status.Phase)
 
 			if resp.Status.Phase == corev1.PodFailed {
 				w.Stop()
@@ -133,7 +139,7 @@ func CreateAndWatchRunnerPod(ctx context.Context, k8sclient *kubernetes.Clientse
 			}
 
 		case <-time.After(20 * time.Second):
-			fmt.Println("timeout to wait for runner pod active")
+			log.Println("timeout to wait for runner pod active")
 			w.Stop()
 			deletePod()
 			return nil, errors.New("timeout wait for runner pod active")

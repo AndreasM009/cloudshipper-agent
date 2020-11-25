@@ -39,7 +39,7 @@
             "mode": "auto",
             "program": "${workspaceFolder}/cmd/livestreamclient",
             "env": {},
-            "args": ["-s", "localhost:4222", "-l", "agentevents", "-cluster-id", "example-stan"]
+            "args": ["-s", "localhost:4222", "-l", "agentevents", "-cluster-id", "test-cluster"]
         },
         {
             "name": "Launch JobClient Debug",
@@ -49,6 +49,36 @@
             "program": "${workspaceFolder}/cmd/jobclient",
             "env": {},
             "args": ["-s", "localhost:4222", "-cluster-id", "test-cluster", "-q", "jobqueue", "-yaml-definition", "./definition.yaml", "-yaml-parameters", "./parameters.yaml"]
+        },
+        {
+            "name": "Launch Controller Kubernetes",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/controller",
+            "env": {},
+            "args": [
+                "-s", "localhost:4222", 
+                "-m", "Kubernetes", 
+                "-cluster-id", "cloudshipper-stan", 
+                "-q", "jobqueue", 
+                "-publish-subscription", "agentevents",
+                "-nats-token-filepath", "/Users/${env:USER}/.cloudshipper/natstoken.conf"]
+        },
+        {
+            "name": "Launch JobClient Kubernetes",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/jobclient",
+            "env": {},
+            "args": [
+                "-s", "localhost:4222", 
+                "-cluster-id", "cloudshipper-stan", 
+                "-q", "jobqueue", 
+                "-yaml-definition", "./definition.yaml", 
+                "-yaml-parameters", "./parameters.yaml",
+                "-t", "G4ngG4ngL0r3nz"]
         }
     ]
 }

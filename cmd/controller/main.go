@@ -17,13 +17,13 @@ import (
 )
 
 func main() {
-	runtime := configuration.NewRuntime()
+	runtime := configuration.GetRuntime()
 	runtime.FromFlags()
 	// load commands
 	azure.LoadAzureCommands()
 
 	// Connection to Nats Server
-	natsConnection, err := channel.NewNatsConnection(runtime.NatsServerConnectionStrings, runtime.NatsConnectionName)
+	natsConnection, err := channel.NewNatsConnection(runtime.NatsServerConnectionStrings, runtime.NatsConnectionName, runtime.NatsToken)
 	if err != nil {
 		log.Panic(err)
 	}

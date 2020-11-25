@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hosted-agent
+  namespace: cs-agent
+  labels:
+    application: cloud-shipper
+    component: hosted-agent
+spec:
+  replicas: 5
+  strategy: 
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  minReadySeconds: 5
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      application: cloud-shipper
+      component: hosted-agent
+  template:
+    metadata:
+      labels:
+        application: cloud-shipper
+        component: hosted-agent
+    spec:
+      serviceAccountName: hosted-agent
+      containers:
+        - name: hosted-agent
+          resources:
+            requests:
+              memory: "16Mi"
+              cpu: "10m"
+            limits:
+              memory: "32Mi"
+              cpu: "30m"
+          image: m009/cs-agent-controller:0.3.12
+          imagePullPolicy: IfNotPresent
+          command: ["./controller"] 
+          args: [
+            "-s", "nats://cloudshipper-nats.nats.svc.cluster.local:4222", 
+            "-m", "Kubernetes", 
+            "-cluster-id", "cloudshipper-stan", 
+            "-q", "jobqueue", 
+            "-publish-subscription", "agentevents",
+            "-nats-token-filepath", "/config/natstoken.conf"]
+          volumeMounts:
+            - name: nats-auth
+              mountPath: /config
+              readOnly: true
+      volumes:
+        - name: nats-auth
+          secret:
+            secretName: agent-nats-auth
+            items:
+            - key: natstoken
+              path: natstoken.conf
+      terminationGracePeriodSeconds: 10800

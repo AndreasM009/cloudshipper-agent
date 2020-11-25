@@ -53,6 +53,8 @@ github.com/andreasM009/nats-library v0.1.1 h1:W44Ew0XAY9EmhtrYcIMAWLsecLxUyolTC+
 github.com/andreasM009/nats-library v0.1.1/go.mod h1:9h2RS1qpN4ZsR2+n8O8h4xnKmunqtT65g3HMO3RRufY=
 github.com/andreasM009/nats-library v0.1.2 h1:xTjXDcyYdh5C3B1/HvMrGQ5ctLzdGjZDOErjV6bFZqo=
 github.com/andreasM009/nats-library v0.1.2/go.mod h1:9h2RS1qpN4ZsR2+n8O8h4xnKmunqtT65g3HMO3RRufY=
+github.com/andreasM009/nats-library v0.2.0 h1:nu5LxcS6dkPt9vJU9hufJ2dTpdmdqq0SJKta9fGWUPo=
+github.com/andreasM009/nats-library v0.2.0/go.mod h1:9h2RS1qpN4ZsR2+n8O8h4xnKmunqtT65g3HMO3RRufY=
 github.com/armon/go-metrics v0.0.0-20190430140413-ec5e00d3c878/go.mod h1:3AMJUQhVx52RsWOnlkpikZr01T/yAVN2gn0861vByNg=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
 github.com/boltdb/bolt v1.3.1/go.mod h1:clJnj/oiGkjum5o1McbSZDSLxVThjynRyGBgiAx27Ps=

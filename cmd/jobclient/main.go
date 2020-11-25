@@ -22,8 +22,9 @@ Options:
 	-cluster-id <cluster id>			NATS streaming server cluster id
 	-yaml-definition <yaml definition>	Path to Yaml definition file
 	-yaml-parameters					Path to yaml parameters file
+	-t <NATS auth token>				NATS auth token if needed
 `
-var natsServerURL, queue, yamldef, parameters, clusterid string
+var natsServerURL, queue, yamldef, parameters, clusterid, natsToken string
 
 func usage() {
 	log.Fatalf(usageStr)
@@ -45,10 +46,11 @@ func main() {
 	flag.StringVar(&yamldef, "yaml-definition", "", "")
 	flag.StringVar(&parameters, "yaml-parameters", "", "")
 	flag.StringVar(&clusterid, "cluster-id", "", "")
+	flag.StringVar(&natsToken, "t", "", "")
 
 	flag.Parse()
 
-	channel, err := channel.NewNatsStreamingChannel(queue, strings.Split(natsServerURL, ","), "jobclient", clusterid, "jobclient")
+	channel, err := channel.NewNatsStreamingChannel(queue, strings.Split(natsServerURL, ","), "jobclient", clusterid, "jobclient", natsToken)
 	if err != nil {
 		log.Panic(err)
 	}

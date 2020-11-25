@@ -3,7 +3,7 @@ module github.com/andreasM009/cloudshipper-agent
 go 1.15
 
 require (
-	github.com/andreasM009/nats-library v0.1.2
+	github.com/andreasM009/nats-library v0.2.0
 	github.com/google/uuid v1.1.2
 	github.com/googleapis/gnostic v0.5.3 // indirect
 	github.com/imdario/mergo v0.3.11 // indirect

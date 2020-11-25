@@ -33,6 +33,7 @@ Usage: runner [options]
 Options:
 	-s <url>            NATS server URL(s)
 	-c <channel name>   NATS channel name to controller
+	-t <nats token>		NATS auth token if needed
 `
 
 func usage() {
@@ -43,10 +44,12 @@ func main() {
 	var (
 		natsServerURL   string
 		natsChannelName string
+		natsToken       string
 	)
 
 	flag.StringVar(&natsServerURL, "s", "", "The nats server URLs (separated by comma)")
 	flag.StringVar(&natsChannelName, "c", "", "The name of the channel (nats subscription) to communicate with controller")
+	flag.StringVar(&natsToken, "t", "", "NATS auth token if needed")
 
 	flag.Usage = usage
 	flag.Parse()
@@ -63,7 +66,7 @@ func main() {
 	signal.Notify(sigchannel, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 
 	// nats channel
-	natsChannel, err := channel.NewNatsChannel(natsChannelName, strings.Split(natsServerURL, ","), fmt.Sprintf("%s-runner", natsChannelName))
+	natsChannel, err := channel.NewNatsChannel(natsChannelName, strings.Split(natsServerURL, ","), fmt.Sprintf("%s-runner", natsChannelName), natsToken)
 	if err != nil {
 		time.Sleep(20 * time.Second)
 		log.Panic(err)
